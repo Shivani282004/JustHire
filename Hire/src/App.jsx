@@ -6,7 +6,7 @@ import LoginPage from "./components/LoginPage";
 import SignupPage from "./components/SignupPage";
 import AdminDashboard from "./components/AdminDashboard";
 import CreateNewUser from './components/CreateNewUser';
-import PastInterviews from './components/PastInterviews';
+import PastInterviews from './components/pastInterviews';
 import QuestionBank from './components/questionBank';
 import ScheduleInterview from './components/ScheduleInterview';
 import AllMeetings from './components/AllMeetings';
