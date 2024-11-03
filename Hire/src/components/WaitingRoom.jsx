@@ -7,7 +7,7 @@ import { User, Play } from "lucide-react";
 import { io } from "socket.io-client";
 import { useNavigate } from 'react-router-dom';
 
-const socket = io("https://justhire-1.onrender.com"); // Replace with your backend URL
+const socket = io("https://justhire-1.onrender.com");
 
 const Navbar = () => (
   <nav className="bg-[#1a1f2e] p-4 text-white">
@@ -22,44 +22,44 @@ export default function WaitingRoom() {
   const [candidateId, setCandidateId] = useState('');
   const [candidateJoined, setCandidateJoined] = useState(false);
   const [loggedInRole, setLoggedInRole] = useState("");
+  const [loggedInEmail, setLoggedInEmail] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const role = localStorage.getItem("loggedInRole");
-    if (role) {
-      setLoggedInRole(role);
-    }
+    const email = localStorage.getItem("loggedInEmail");
+    if (role) setLoggedInRole(role);
+    if (email) setLoggedInEmail(email);
 
-    const handleCandidateJoined = (data) => {
-      if (loggedInRole === "expert") {
+    socket.on("candidate_joined", (data) => {
+      if (role === "expert") {
         setCandidateJoined(true);
         console.log("Candidate has joined:", data);
       }
-    };
+    });
 
-    const handleStartMeeting = () => {
+    socket.on("start_meeting", () => {
       navigate('/video-call-interface');
-    };
-
-    socket.on("candidate_joined", handleCandidateJoined);
-    socket.on("start_meeting", handleStartMeeting);
+    });
 
     return () => {
-      socket.off("candidate_joined", handleCandidateJoined);
-      socket.off("start_meeting", handleStartMeeting);
+      socket.off("candidate_joined");
+      socket.off("start_meeting");
     };
-  }, [loggedInRole, navigate]);
+  }, [navigate]);
 
   const handleJoinMeeting = (e) => {
     e.preventDefault();
     socket.emit("join_meeting", { email, candidateId });
-    setCandidateJoined(true);
+    localStorage.setItem("candidateEmail", email);
+    localStorage.setItem("candidateId", candidateId);
     console.log('Joining meeting with:', { email, candidateId });
   };
 
   const handleEnterMeeting = () => {
-    socket.emit("start_meeting", { email: localStorage.getItem('loggedInEmail'), candidateId });
-    navigate('/video-call-interface');
+    const expertEmail = localStorage.getItem('loggedInEmail');
+    const storedCandidateId = localStorage.getItem('candidateId');
+    socket.emit("start_meeting", { expertEmail, candidateId: storedCandidateId });
   };
 
   return (
@@ -83,7 +83,7 @@ export default function WaitingRoom() {
                   <User className="h-32 w-32 text-purple-500" />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-xl font-semibold">{localStorage.getItem('loggedInEmail')}</h3>
+                  <h3 className="text-xl font-semibold">{loggedInEmail}</h3>
                   <p className="text-gray-400">Senior Technical Interviewer</p>
                 </div>
                 {candidateJoined ? (
