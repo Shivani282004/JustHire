@@ -12,8 +12,8 @@ import questionbank from './routes/questionBankRoute.js';
 dotenv.config({});
 
 const app = express();
-const server = http.createServer(app); // Create HTTP server instance
-const io = new Server(server, {        // Initialize Socket.IO with CORS options
+const server = http.createServer(app);
+const io = new Server(server, {     
     cors: {
         origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -27,10 +27,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 const corsOptions = {
-    origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
-    methods: 'GET,POST,PUT,DELETE,OPTIONS',
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
+    methods: 'GET,POST,PUT,DELETE,OPTIONS',
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 };
 
 app.use(cors(corsOptions));
@@ -49,8 +49,15 @@ io.on("connection", (socket) => {
     // Listen for candidate joining the meeting
     socket.on("join_meeting", (data) => {
         // Broadcast to all other clients that the candidate has joined
-        io.emit("candidate_joined", data);
+        socket.broadcast.emit("candidate_joined", data); // Only emit to other clients
         console.log("Candidate joined meeting:", data);
+    });
+
+    // Listen for the expert starting the meeting
+    socket.on("start_meeting", (data) => {
+        // Notify all participants in the meeting that the meeting has started
+        socket.broadcast.emit("start_meeting", data); // Emit to others in the room
+        console.log("Meeting started:", data);
     });
 
     socket.on("disconnect", () => {
@@ -60,6 +67,6 @@ io.on("connection", (socket) => {
 
 // Start server
 server.listen(PORT, () => {
-    connectDB();
-    console.log(`Server running at port ${PORT}`);
+    connectDB();
+    console.log(`Server running at port ${PORT}`);
 });

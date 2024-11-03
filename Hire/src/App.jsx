@@ -13,6 +13,7 @@ import AllMeetings from './components/AllMeetings';
 import ExpertDashboard from './components/ExpertDashboard';
 import Interviews from './components/Interviews';
 import WaitingRoom from './components/WaitingRoom';
+import VideoCallInterface from './components/VideoCallInterface';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
         <Route path="/interviews" element={<Interviews />} />
         <Route path="/waiting-room" element={<WaitingRoom />} />
+        <Route path="/video-call-interface" element={<VideoCallInterface />} />
       </Routes>
     </Router>
   );
