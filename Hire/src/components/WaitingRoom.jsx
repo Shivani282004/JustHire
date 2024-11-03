@@ -37,33 +37,29 @@ export default function WaitingRoom() {
       }
     };
 
-    const handleStartMeeting = (data) => {
-      if (loggedInRole === "candidate") {
-        navigate('/video-call-interface'); // Navigate to video call interface
-      }
+    const handleStartMeeting = () => {
+      navigate('/video-call-interface');
     };
 
-    // Listen for candidate joining notification
     socket.on("candidate_joined", handleCandidateJoined);
-    // Listen for start meeting notification
     socket.on("start_meeting", handleStartMeeting);
 
     return () => {
-      socket.off("candidate_joined", handleCandidateJoined); // Clean up the event listener
-      socket.off("start_meeting", handleStartMeeting); // Clean up the event listener
+      socket.off("candidate_joined", handleCandidateJoined);
+      socket.off("start_meeting", handleStartMeeting);
     };
   }, [loggedInRole, navigate]);
 
   const handleJoinMeeting = (e) => {
     e.preventDefault();
-    socket.emit("join_meeting", { email, candidateId }); // Notify the server that candidate joined
+    socket.emit("join_meeting", { email, candidateId });
     setCandidateJoined(true);
     console.log('Joining meeting with:', { email, candidateId });
   };
 
   const handleEnterMeeting = () => {
-    socket.emit("start_meeting", { email, candidateId }); // Notify the server that the expert has entered the meeting
-    navigate('/video-call-interface'); // Navigate to video call interface
+    socket.emit("start_meeting", { email: localStorage.getItem('loggedInEmail'), candidateId });
+    navigate('/video-call-interface');
   };
 
   return (
@@ -73,38 +69,46 @@ export default function WaitingRoom() {
         <Card className="w-full max-w-2xl bg-[#242a38] border-gray-700 text-white shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">JustHire Interview Waiting Room</CardTitle>
-            <CardDescription className="text-gray-400">Please wait for the other participant to join</CardDescription>
+            <CardDescription className="text-gray-400">
+              {loggedInRole === "expert" 
+                ? "Waiting for the candidate to join" 
+                : "Please enter your details to join the meeting"}
+            </CardDescription>
           </CardHeader>
 
-          {/* Render interviewer or candidate content based on loggedInRole */}
-          {loggedInRole === "expert" ? (
-            <CardContent className="space-y-4 mt-4">
-              <div className="flex justify-center">
-                <User className="h-32 w-32 text-purple-500" />
-              </div>
-              <div className="text-center">
-                <h3 className="text-xl font-semibold">{localStorage.getItem('loggedInEmail')}</h3>
-                <p className="text-gray-400">Senior Technical Interviewer</p>
-              </div>
-              {candidateJoined && (
-                <div className="text-green-500 text-center mt-4 font-medium">
-                  Candidate has joined. You may now enter the meeting.
+          <CardContent className="space-y-4 mt-4">
+            {loggedInRole === "expert" ? (
+              <>
+                <div className="flex justify-center">
+                  <User className="h-32 w-32 text-purple-500" />
                 </div>
-              )}
-              <div className="flex justify-center space-x-4 mt-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mr-0 bg-purple-500 hover:bg-purple-600 text-black hover:border-purple-600" 
-                  onClick={handleEnterMeeting}
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  Enter Meeting
-                </Button>
-              </div>
-            </CardContent>
-          ) : (
-            <CardContent className="space-y-4 mt-4">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold">{localStorage.getItem('loggedInEmail')}</h3>
+                  <p className="text-gray-400">Senior Technical Interviewer</p>
+                </div>
+                {candidateJoined ? (
+                  <div className="text-green-500 text-center mt-4 font-medium">
+                    Candidate has joined. You may now enter the meeting.
+                  </div>
+                ) : (
+                  <div className="text-yellow-500 text-center mt-4 font-medium">
+                    Waiting for candidate to join...
+                  </div>
+                )}
+                <div className="flex justify-center space-x-4 mt-4">
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="bg-purple-500 hover:bg-purple-600 text-white hover:text-white border-purple-500 hover:border-purple-600" 
+                    onClick={handleEnterMeeting}
+                    disabled={!candidateJoined}
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Enter Meeting
+                  </Button>
+                </div>
+              </>
+            ) : (
               <form onSubmit={handleJoinMeeting}>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -136,8 +140,8 @@ export default function WaitingRoom() {
                   Join Meeting
                 </Button>
               </form>
-            </CardContent>
-          )}
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>
