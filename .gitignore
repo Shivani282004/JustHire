@@ -31,3 +31,4 @@ backend/.env
 # OS specific files
 Thumbs.db
 ehthumbs.db
+.vercel

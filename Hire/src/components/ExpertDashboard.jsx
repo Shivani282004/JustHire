@@ -15,7 +15,7 @@ export default function ExpertDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/interviews/getAll')
+    fetch('https://justhire-1.onrender.com/api/interviews/getAll')
       .then(response => response.json())
       .then(data => {
         setInterviews(data)

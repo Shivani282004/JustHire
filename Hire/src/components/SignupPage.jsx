@@ -32,7 +32,7 @@ export default function SignupComponent() {
     console.log("Role:", signupType);
 
     try {
-      const response = await fetch("http://localhost:8000/api/user/register", {
+      const response = await fetch("https://justhire-1.onrender.com/api/user/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

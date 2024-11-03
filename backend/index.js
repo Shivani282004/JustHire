@@ -32,7 +32,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use("/api/user", userRoute);
 app.use('/api/interviews', interviewRoute);
-app.use('/api/questionBank', qu);
+app.use('/api/questionBank', questionbank);
 
 app.listen(PORT,()=>{
     connectDB();

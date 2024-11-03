@@ -26,7 +26,7 @@ export default function ScheduleInterview() {
         questions: [{ questionText: data.initialQuestion }],
       });
 
-      const response = await fetch('http://localhost:8000/api/interviews/create', {
+      const response = await fetch('https://justhire-1.onrender.com/api/interviews/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

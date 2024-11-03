@@ -31,7 +31,7 @@ export default function Component() {
 
     try {
         console.log("Attempting login...");
-        const response = await fetch("http://localhost:8000/api/user/login", {
+        const response = await fetch("https://justhire-1.onrender.com/api/user/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

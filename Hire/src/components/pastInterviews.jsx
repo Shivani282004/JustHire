@@ -14,7 +14,7 @@ export default function PastInterviews() {
   useEffect(() => {
     const fetchInterviews = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/interviews/getAll');
+        const response = await fetch('https://justhire-1.onrender.com/api/interviews/getAll');
         if (!response.ok) {
           toast.error("failed to fetch Interviews");
         }

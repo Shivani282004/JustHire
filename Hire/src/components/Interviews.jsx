@@ -91,7 +91,7 @@ export default function AllMeetings() {
     const fetchInterviews = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:8000/api/interviews/getAll');
+        const response = await fetch('https://justhire-1.onrender.com/api/interviews/getAll');
         if (!response.ok) throw new Error('Failed to fetch interviews');
         const data = await response.json();
         setInterviews(data);
