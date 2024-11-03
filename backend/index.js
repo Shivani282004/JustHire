@@ -9,17 +9,17 @@ import userRoute from "./routes/userRoutes.js";
 import interviewRoute from "./routes/interviewRoutes.js";
 import questionbank from './routes/questionBankRoute.js';
 
-dotenv.config({});
+dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {     
-    cors: {
-        origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true
-    }
+const io = new Server(server, {     
+    cors: {
+        origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true
+    }
 });
 
 app.use(express.json());
@@ -27,15 +27,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 const corsOptions = {
-    origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
-    methods: 'GET,POST,PUT,DELETE,OPTIONS',
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
+    methods: 'GET,POST,PUT,DELETE,OPTIONS',
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 };
 
 app.use(cors(corsOptions));
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 // API routes
 app.use("/api/user", userRoute);
@@ -44,31 +44,34 @@ app.use('/api/questionBank', questionbank);
 
 // Socket.IO events for real-time updates
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+    console.log("User connected:", socket.id);
 
-    // Listen for candidate joining the meeting
-    socket.on("join_meeting", (data) => {
-        // Join a room based on the candidateId
-        socket.join(data.candidateId);
-        // Broadcast to all other clients in the room that the candidate has joined
-        socket.to(data.candidateId).emit("candidate_joined", data);
-        console.log("Candidate joined meeting:", data);
-    });
+    socket.on("join_room", (roomId) => {
+        socket.join(roomId);
+        console.log(`User ${socket.id} joined room ${roomId}`);
+    });
 
-    // Listen for the expert starting the meeting
-    socket.on("start_meeting", (data) => {
-        // Notify all participants in the meeting that the meeting has started
-        io.to(data.candidateId).emit("start_meeting", data);
-        console.log("Meeting started:", data);
-    });
+    // Listen for candidate joining the meeting
+    socket.on("join_meeting", (data) => {
+        const { email, candidateId, roomId } = data;
+        socket.join(roomId);
+        console.log(`Candidate ${email} joined room ${roomId}`);
+        socket.to(roomId).emit("candidate_joined", { email, candidateId, roomId });
+    });
 
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-    });
+    // Listen for the expert starting the meeting
+    socket.on("start_meeting", (data) => {
+        const { expertEmail, candidateId, roomId } = data;
+        console.log(`Starting meeting in room ${roomId}`);
+        io.to(roomId).emit("start_meeting", { expertEmail, candidateId, roomId });
+    });
+
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+    });
 });
 
-// Start server
+connectDB();
 server.listen(PORT, () => {
-    connectDB();
-    console.log(`Server running at port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });

@@ -7,7 +7,7 @@ import { User, Play } from "lucide-react";
 import { io } from "socket.io-client";
 import { useNavigate } from 'react-router-dom';
 
-const socket = io("https://justhire-1.onrender.com");
+const socket = io("http://localhost:8000");
 
 const Navbar = () => (
   <nav className="bg-[#1a1f2e] p-4 text-white">
@@ -23,22 +23,35 @@ export default function WaitingRoom() {
   const [candidateJoined, setCandidateJoined] = useState(false);
   const [loggedInRole, setLoggedInRole] = useState("");
   const [loggedInEmail, setLoggedInEmail] = useState("");
+  const [roomId, setRoomId] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const role = localStorage.getItem("loggedInRole");
     const email = localStorage.getItem("loggedInEmail");
+    const storedRoomId = localStorage.getItem("roomId");
+    
     if (role) setLoggedInRole(role);
     if (email) setLoggedInEmail(email);
+    if (storedRoomId) setRoomId(storedRoomId);
+
+    // If expert, join the room immediately
+    if (role === "expert" && storedRoomId) {
+      socket.emit("join_room", storedRoomId);
+    }
 
     socket.on("candidate_joined", (data) => {
+      console.log("Candidate joined event received:", data);
       if (role === "expert") {
         setCandidateJoined(true);
+        setRoomId(data.roomId);
+        localStorage.setItem("roomId", data.roomId);
         console.log("Candidate has joined:", data);
       }
     });
 
-    socket.on("start_meeting", () => {
+    socket.on("start_meeting", (data) => {
+      console.log("Start meeting event received:", data);
       navigate('/video-call-interface');
     });
 
@@ -50,16 +63,23 @@ export default function WaitingRoom() {
 
   const handleJoinMeeting = (e) => {
     e.preventDefault();
-    socket.emit("join_meeting", { email, candidateId });
+    const newRoomId = `room_${candidateId}`;
+    setRoomId(newRoomId);
     localStorage.setItem("candidateEmail", email);
     localStorage.setItem("candidateId", candidateId);
-    console.log('Joining meeting with:', { email, candidateId });
+    localStorage.setItem("roomId", newRoomId);
+    
+    socket.emit("join_meeting", { email, candidateId, roomId: newRoomId });
+    console.log('Joining meeting with:', { email, candidateId, roomId: newRoomId });
+    
+    // Navigate to waiting room after joining
+    navigate('/waiting-room');
   };
 
   const handleEnterMeeting = () => {
     const expertEmail = localStorage.getItem('loggedInEmail');
     const storedCandidateId = localStorage.getItem('candidateId');
-    socket.emit("start_meeting", { expertEmail, candidateId: storedCandidateId });
+    socket.emit("start_meeting", { expertEmail, candidateId: storedCandidateId, roomId });
   };
 
   return (
