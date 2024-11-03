@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { User, Play } from "lucide-react"
 import { io } from "socket.io-client";
 
-const socket = io("https://your-server-url.com"); // Replace with your backend URL
+const socket = io("https://justhire-1.onrender.com"); // Replace with your backend URL
 
 const Navbar = () => (
   <nav className="bg-[#1a1f2e] p-4 text-white">
