@@ -20,7 +20,7 @@ app.use(express.urlencoded({extended:true}));
 app.use(bodyParser.json()); 
 
 const corsOptions = {
-    origin:'http://localhost:5174',
+    origin:['http://localhost:5174','https://justhirehere.netlify.app/'],
     credentials:true
 }
 
