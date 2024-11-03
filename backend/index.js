@@ -48,15 +48,17 @@ io.on("connection", (socket) => {
 
     // Listen for candidate joining the meeting
     socket.on("join_meeting", (data) => {
-        // Broadcast to all other clients that the candidate has joined
-        socket.broadcast.emit("candidate_joined", data); // Only emit to other clients
+        // Join a room based on the candidateId
+        socket.join(data.candidateId);
+        // Broadcast to all other clients in the room that the candidate has joined
+        socket.to(data.candidateId).emit("candidate_joined", data);
         console.log("Candidate joined meeting:", data);
     });
 
     // Listen for the expert starting the meeting
     socket.on("start_meeting", (data) => {
         // Notify all participants in the meeting that the meeting has started
-        socket.broadcast.emit("start_meeting", data); // Emit to others in the room
+        io.to(data.candidateId).emit("start_meeting", data);
         console.log("Meeting started:", data);
     });
 
