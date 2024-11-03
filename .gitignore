@@ -1,0 +1,33 @@
+# Node.js
+node_modules/
+Hire/node_modules/
+backend/node_modules/
+
+# Build output
+dist/
+build/
+public/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment Variables
+backend/.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependency directories
+/coverage/
+/reports/
+
+# IDE specific files
+.vscode/
+.idea/
+.DS_Store
+
+# OS specific files
+Thumbs.db
+ehthumbs.db
