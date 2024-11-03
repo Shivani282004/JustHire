@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { User, Play } from "lucide-react"
+import { io } from "socket.io-client";
+
+const socket = io("https://your-server-url.com"); // Replace with your backend URL
 
 const Navbar = () => (
   <nav className="bg-[#1a1f2e] p-4 text-white">
@@ -24,10 +27,23 @@ export default function WaitingRoom() {
     if (role) {
       setLoggedInRole(role)
     }
-  }, [])
+
+    // Listen for candidate joining notification
+    socket.on("candidate_joined", (data) => {
+      if (loggedInRole === "expert") {
+        setCandidateJoined(true)
+        console.log("Candidate has joined:", data)
+      }
+    })
+
+    return () => {
+      socket.off("candidate_joined") // Clean up the event listener
+    }
+  }, [loggedInRole])
 
   const handleJoinMeeting = (e) => {
     e.preventDefault()
+    socket.emit("join_meeting", { email, candidateId }) // Notify the server that candidate joined
     setCandidateJoined(true)
     console.log('Joining meeting with:', { email, candidateId })
   }

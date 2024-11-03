@@ -23,7 +23,7 @@ const Navbar = () => (
 
 // InterviewCard component
 const InterviewCard = ({ interview, activeTab }) => (
-  <Card className="bg-[#1a1f2e] border-slate-700 mb-4 mt-3 w-1/3 min-w-0 mr-5">
+  <Card className="min-w-10 bg-[#1a1f2e] border-slate-700 mb-4 mt-3 w-1/3  mr-5">
     <CardHeader>
       <CardTitle className="text-lg font-semibold text-white flex justify-between items-center">
         <span>{interview.role}</span>
