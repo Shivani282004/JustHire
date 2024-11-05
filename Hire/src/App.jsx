@@ -12,8 +12,8 @@ import ScheduleInterview from './components/ScheduleInterview';
 import AllMeetings from './components/AllMeetings';
 import ExpertDashboard from './components/ExpertDashboard';
 import Interviews from './components/Interviews';
-import WaitingRoom from './components/WaitingRoom';
-import VideoCallInterface from './components/VideoCallInterface';
+import JoinMeeting from './components/JoinMeeting';
+
 
 function App() {
   return (
@@ -30,8 +30,7 @@ function App() {
         <Route path="/all-meetings" element={<AllMeetings />} />
         <Route path="/expert-dashboard" element={<ExpertDashboard />} />
         <Route path="/interviews" element={<Interviews />} />
-        <Route path="/waiting-room" element={<WaitingRoom />} />
-        <Route path="/video-call-interface" element={<VideoCallInterface />} />
+        <Route path="/join-meeting" element={<JoinMeeting />} />
       </Routes>
     </Router>
   );

@@ -1,10 +1,12 @@
-import User from '../models/User.js'; // Ensure you are using the correct path
+// Controller: userController.js
+
+import User from '../models/User.js';
+import bcrypt from 'bcryptjs';
 
 // Register a new user
 export const registerUser = async (req, res) => {
     const { email, password, role } = req.body;
 
-    // Input validation
     if (!email || !password || !role) {
         return res.status(400).json({ 
             message: 'Validation Error: All fields (email, password, role) are required.' 
@@ -12,7 +14,6 @@ export const registerUser = async (req, res) => {
     }
 
     try {
-        // Check if the user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(409).json({ 
@@ -20,15 +21,18 @@ export const registerUser = async (req, res) => {
             });
         }
 
-        // Create and save the new user
-        const newUser = new User({ email, password, role });
+        // Hash the password before saving
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = new User({ email, password: hashedPassword, role });
         await newUser.save();
 
         res.status(201).json({ 
             message: 'User registered successfully!' 
         });
     } catch (error) {
-        console.error('Error during user registration:', error); // Log the error
+        console.error('Error during user registration:', error);
         res.status(500).json({ 
             message: 'Server Error: Unable to register user.', 
             error: error.message || 'Unknown error' 
@@ -36,13 +40,10 @@ export const registerUser = async (req, res) => {
     }
 };
 
-
-
 // User login
 export const loginUser = async (req, res) => {
-    const { email, password, role } = req.body; // Include role in request body
+    const { email, password, role } = req.body;
 
-    // Input validation
     if (!email || !password || !role) {
         return res.status(400).json({ 
             message: 'Validation Error: Email, password, and role are required.' 
@@ -50,7 +51,6 @@ export const loginUser = async (req, res) => {
     }
 
     try {
-        // Find user by email
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({ 
@@ -58,7 +58,6 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        // Check password match
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
             return res.status(401).json({ 
@@ -66,14 +65,12 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        // Check if the user's role matches
         if (user.role !== role) {
             return res.status(403).json({
                 message: 'Authorization Error: Role does not match.',
             });
         }
 
-        // Login successful
         res.status(200).json({ 
             message: 'Login successful', 
             role: user.role 
@@ -85,3 +82,20 @@ export const loginUser = async (req, res) => {
         });
     }
 };
+
+export const getUserById = async(req, res)=> {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ error: "Invalid ID format" });
+    }
+    try {
+        // Ensure you are only passing req.params.id, not req.params itself.
+        const user = await User.findById(req.params.id); 
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json(user);
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+}

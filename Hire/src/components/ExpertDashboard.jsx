@@ -13,9 +13,10 @@ import { useNavigate } from 'react-router-dom';
 export default function ExpertDashboard() {
   const [interviews, setInterviews] = useState([])
   const [loading, setLoading] = useState(true)
+    const navigate=useNavigate();
 
   useEffect(() => {
-    fetch('https://justhire-1.onrender.com/api/interviews/getAll')
+    fetch('http://localhost:8000/api/interviews/getAll')
       .then(response => response.json())
       .then(data => {
         setInterviews(data)

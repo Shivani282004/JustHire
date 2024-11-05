@@ -1,96 +1,121 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, User, Briefcase, Play, FileText, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, Clock, User, Briefcase, Video, Trash2, Search, Hash } from "lucide-react";
 
 const Navbar = () => (
   <nav className="bg-[#1a1f2e] p-4 text-white">
     <div className="container mx-auto flex justify-between items-center">
-      <span className="text-xl font-bold text-purple-500">JustHire</span>
+      <div className="flex-shrink-0">
+        <span className="text-xl font-bold">
+          <span className="text-purple-500">Just</span>Hire
+        </span>
+      </div>
+      <div className="space-x-4">
+        <Link to="/profile" className="text-purple-500 hover:text-purple-600 mr-7">Profile</Link>
+      </div>
     </div>
   </nav>
 );
 
-const InterviewCard = ({ interview, activeTab }) => {
+const InterviewCard = ({ interview, onJoin, onDelete, onEvaluate }) => {
   const navigate = useNavigate();
 
   return (
-    <Card className="bg-[#1a1f2e] border-slate-700 mb-4 mt-3 w-1/3 min-w-0 mr-5">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-white flex justify-between items-center">
+    <div className="bg-[#1a1f2e] border border-slate-700 rounded-lg h-[280px] flex flex-col">
+      {/* Header */}
+      <div className="p-4 border-b border-slate-700">
+        <div className="text-lg font-semibold text-white flex justify-between items-center">
           <span>{interview.role}</span>
           <span className="text-sm font-normal text-purple-500">{interview.status}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div
+        className="p-4 flex-1 overflow-y-auto"
+        style={{
+          overflowY: 'scroll',
+          height: '100%',
+          msOverflowStyle: 'none', // IE and Edge
+          scrollbarWidth: 'none', // Firefox
+        }}
+      >
         <div className="space-y-2 text-sm text-slate-300">
           <div className="flex items-center">
-            <Calendar className="mr-2 h-4 w-4 text-purple-500" />
+            <Calendar className="mr-2 h-4 w-4 text-purple-500 shrink-0" />
             <span>{new Date(interview.date).toLocaleDateString()}</span>
           </div>
           <div className="flex items-center">
-            <Clock className="mr-2 h-4 w-4 text-purple-500" />
+            <Clock className="mr-2 h-4 w-4 text-purple-500 shrink-0" />
             <span>{new Date(interview.date).toLocaleTimeString()}</span>
           </div>
           <div className="flex items-center">
-            <User className="mr-2 h-4 w-4 text-purple-500" />
-            <span>Candidate: {interview.candidateId.email}</span>
+            <Hash className="mr-2 h-4 w-4 text-purple-500 shrink-0" />
+            <span>Meeting ID: {interview.meetingId}</span>
           </div>
           <div className="flex items-center">
-            <Briefcase className="mr-2 h-4 w-4 text-purple-500" />
-            <span>Expert: {interview.expertId.email}</span>
+            <User className="mr-2 h-4 w-4 text-purple-500 shrink-0" />
+            <span className="truncate">Candidate: {interview.candidateId.email}</span>
+          </div>
+          <div className="flex items-start">
+            <Briefcase className="mr-2 h-4 w-4 text-purple-500 shrink-0 mt-1" />
+            <span className="break-words">
+              Experts: {interview.expertIds.map(expert => expert.email).join(', ')}
+            </span>
           </div>
         </div>
-        <div className="flex justify-between mt-6">
-          {activeTab === "Scheduled" && (
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mr-0 bg-purple-500 hover:bg-purple-600 text-black hover:border-purple-600" 
-                onClick={() => navigate("/waiting-room")}
-              >
-                <Play className="mr-2 h-4 w-4" />
-                Start Meeting
-              </Button>
-              <Button variant="outline" size="sm" className="mr-0 bg-purple-500 hover:bg-purple-600 hover:border-purple-600">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </div>
+      </div>
+
+      {/* Footer with buttons - fixed at bottom */}
+      {interview.status !== "Completed" && (
+        <div className="p-4 border-t border-slate-700 bg-[#1a1f2e] mt-auto flex justify-between items-center">
+          {interview.status === "Scheduled" && (
+            <button
+              onClick={() => onJoin(interview._id)}
+              className="flex items-center bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md"
+            >
+              <Video className="mr-2 h-4 w-4" />
+              Join Meeting
+            </button>
           )}
-          {activeTab === "Pending Evaluation" && (
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" className="bg-purple-500 hover:bg-purple-600 hover:border-purple-600">
-                <FileText className="mr-2 h-4 w-4" />
-                Evaluate
-              </Button>
-              <Button variant="outline" size="sm" className="bg-purple-500 hover:bg-purple-600 hover:border-purple-600">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </div>
+          {interview.status === "Pending Evaluation" && (
+            <button
+              onClick={() => onEvaluate(interview._id)}
+              className="flex items-center bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md"
+            >
+              <User className="mr-2 h-4 w-4" />
+              Evaluate
+            </button>
           )}
+          <button
+            onClick={() => onDelete(interview._id)}
+            className="flex items-center bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md ml-2"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </button>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 
-export default function AllMeetings() {
+export default function Interviews() {
   const [interviews, setInterviews] = useState([]);
   const [activeTab, setActiveTab] = useState("Scheduled");
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
   const loggedInEmail = localStorage.getItem("loggedInEmail");
+  const navigate = useNavigate(); // Use navigate here
 
   useEffect(() => {
     const fetchInterviews = async () => {
       try {
-        setLoading(true);
-        const response = await fetch('https://justhire-1.onrender.com/api/interviews/getAll');
-        if (!response.ok) throw new Error('Failed to fetch interviews');
+        const response = await fetch('http://localhost:8000/api/interviews/getAll');
+        if (!response.ok) {
+          throw new Error('Failed to fetch interviews');
+        }
         const data = await response.json();
         setInterviews(data);
       } catch (error) {
@@ -99,55 +124,88 @@ export default function AllMeetings() {
         setLoading(false);
       }
     };
+
     fetchInterviews();
   }, []);
 
   const filterInterviews = (status) =>
-    interviews.filter(
-      (interview) =>
-        (interview.candidateId.email === loggedInEmail || interview.expertId.email === loggedInEmail) &&
-        interview.status.trim().toLowerCase() === status.trim().toLowerCase()
-    );
+    interviews
+      .filter(interview => interview.status === status)
+      .filter(interview => interview.expertIds.some(expert => expert.email === loggedInEmail))
+      .filter(interview =>
+        interview.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        interview.candidateId.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+  const handleJoin = (interviewId) => {
+    console.log(`Joining meeting for interview ${interviewId}`);
+    // Navigate to the join meeting page here
+    navigate('/join-meeting');
+  };
+
+  const handleDelete = (interviewId) => {
+    console.log(`Deleting interview ${interviewId}`);
+    // You can add the delete functionality here if needed
+  };
+
+  const handleEvaluate = (interviewId) => {
+    console.log(`Evaluating interview ${interviewId}`);
+    // Add evaluation logic here if needed
+  };
 
   return (
     <div className="h-screen w-screen bg-[#0a0d16] text-white">
       <Navbar />
       <main className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-6">All Interviews</h1>
-        <Tabs defaultValue="Scheduled" className="space-y-4" onValueChange={(value) => setActiveTab(value)}>
-          <TabsList className="bg-[#1a2137] border-gray-700">
-            <TabsTrigger value="Scheduled" className="data-[state=active]:bg-purple-600 mr-2">Scheduled</TabsTrigger>
-            <TabsTrigger value="Pending Evaluation" className="data-[state=active]:bg-purple-600 mr-2">Pending</TabsTrigger>
-            <TabsTrigger value="Completed" className="data-[state=active]:bg-purple-600">Completed</TabsTrigger>
-          </TabsList>
-          <TabsContent value="Scheduled">
-            {loading ? (
-              <p>Loading scheduled interviews...</p>
-            ) : (
-              filterInterviews("Scheduled").map((interview) => (
-                <InterviewCard key={interview.id} interview={interview} activeTab={activeTab} />
-              ))
-            )}
-          </TabsContent>
-          <TabsContent value="Pending Evaluation">
-            {loading ? (
-              <p>Loading pending interviews...</p>
-            ) : (
-              filterInterviews("Pending Evaluation").map((interview) => (
-                <InterviewCard key={interview.id} interview={interview} activeTab={activeTab} />
-              ))
-            )}
-          </TabsContent>
-          <TabsContent value="Completed">
-            {loading ? (
-              <p>Loading completed interviews...</p>
-            ) : (
-              filterInterviews("Completed").map((interview) => (
-                <InterviewCard key={interview.id} interview={interview} activeTab={activeTab} />
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Interviews</h1>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search interviews..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-[#1a1f2e] border border-slate-700 rounded-lg px-4 py-2 pl-10 w-64 text-white"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <div className="flex space-x-2">
+            {["Scheduled", "Pending Evaluation", "Completed"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === tab
+                    ? 'bg-purple-500 text-white'
+                    : 'text-slate-400 hover:text-white hover:bg-[#1a1f2e]'
+                }`}
+              >
+                {tab === "Pending Evaluation" ? "Pending" : tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filterInterviews(activeTab).map((interview) => (
+              <InterviewCard
+                key={interview._id}
+                interview={interview}
+                onJoin={handleJoin}
+                onDelete={handleDelete}
+                onEvaluate={handleEvaluate}
+              />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

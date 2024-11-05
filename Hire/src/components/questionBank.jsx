@@ -16,7 +16,7 @@ export default function QuestionBank() {
   useEffect(() => {
     const fetchQuestionBanks = async () => {
       try {
-        const response = await fetch('https://justhire-1.onrender.com/api/questionBank/getAll');
+        const response = await fetch('http://localhost:8000/api/questionBank/getAll');
         if (!response.ok) {
           toast.error("Failed to fetch Question Bank");
           return; // Stop further code execution

@@ -31,7 +31,7 @@ export default function Component() {
 
     try {
         console.log("Attempting login...");
-        const response = await fetch("https://justhire-1.onrender.com/api/user/login", {
+        const response = await fetch("http://localhost:8000/api/user/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -69,9 +69,10 @@ export default function Component() {
                     navigate('/admin-dashboard');
                 } else if (role === 'expert') {
                     navigate('/expert-dashboard');
-                } else{
-                  navigate('/waiting-room')
                 }
+                else if (role === 'candidate') {
+                  navigate('/join-meeting');
+              }
             }
         });
     } catch (error) {

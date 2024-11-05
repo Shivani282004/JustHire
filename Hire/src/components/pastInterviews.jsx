@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Calendar, User, Briefcase, Star } from "lucide-react";
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function PastInterviews() {
   const [interviews, setInterviews] = useState([]);
@@ -14,15 +14,16 @@ export default function PastInterviews() {
   useEffect(() => {
     const fetchInterviews = async () => {
       try {
-        const response = await fetch('https://justhire-1.onrender.com/api/interviews/getAll');
+        const response = await fetch('http://localhost:8000/api/interviews/getAll');
         if (!response.ok) {
-          toast.error("failed to fetch Interviews");
+          throw new Error("Failed to fetch Interviews");
         }
         const data = await response.json();
         const completedInterviews = data.filter(interview => interview.status === "Completed");
         setInterviews(completedInterviews);
       } catch (err) {
         setError(err.message);
+        toast.error("Failed to fetch interviews. Please try again later.");
       } finally {
         setIsLoading(false);
       }
@@ -38,8 +39,6 @@ export default function PastInterviews() {
       </div>
     );
   }
-
- 
 
   return (
     <div className="container mx-auto p-4 bg-[#0a0d16] h-screen w-screen">
@@ -66,21 +65,28 @@ export default function PastInterviews() {
                 <div className="space-y-2">
                   <div className="flex items-center">
                     <User className="mr-2 h-4 w-4 text-purple-400" />
-                    <span className="text-sm">Candidate: {interview.candidateId.email}</span>
+                    <span className="text-sm">Candidate: {interview.candidateId?.email || "N/A"}</span>
                   </div>
                   <div className="flex items-center">
                     <Briefcase className="mr-2 h-4 w-4 text-purple-400" />
-                    <span className="text-sm">Expert: {interview.expertId.email}</span>
+                    <span className="text-sm">
+                      Experts:{" "}
+                      {interview.expertIds && interview.expertIds.length > 0
+                        ? interview.expertIds.map((expert, index) => (
+                            <span key={expert._id}>{expert.email}{index < interview.expertIds.length - 1 ? ', ' : ''}</span>
+                          ))
+                        : "N/A"}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <Star className="mr-2 h-4 w-4 text-yellow-400" />
-                    <span className="text-sm">Expert Score: {interview.expertOverallScore.toFixed(1)}</span>
+                    <span className="text-sm">Expert Score: {interview.expertOverallScore?.toFixed(1) || "N/A"}</span>
                   </div>
                   <div className="flex items-center">
                     <Star className="mr-2 h-4 w-4 text-yellow-400" />
-                    <span className="text-sm">Candidate Score: {interview.candidateOverallScore.toFixed(1)}</span>
+                    <span className="text-sm">Candidate Score: {interview.candidateOverallScore?.toFixed(1) || "N/A"}</span>
                   </div>
-                  <p className="text-sm mt-2 text-slate-300">{interview.feedback}</p>
+                  <p className="text-sm mt-2 text-slate-300">{interview.feedback || "No feedback provided."}</p>
                 </div>
               </CardContent>
             </Card>

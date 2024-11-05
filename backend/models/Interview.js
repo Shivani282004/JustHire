@@ -9,11 +9,13 @@ const interviewSchema = new Schema(
       ref: "User",
       required: true,
     },
-    expertId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    expertIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    ],
     date: {
       type: Date,
       required: true,
@@ -26,7 +28,7 @@ const interviewSchema = new Schema(
       {
         questionText: {
           type: String,
-          default:null
+          default: null,
         },
         relevancyScore: {
           type: Number,
@@ -62,6 +64,10 @@ const interviewSchema = new Schema(
       type: String,
       enum: ["Scheduled", "Completed", "Pending Evaluation"],
       default: "Scheduled",
+    },
+    meetingId: {
+      type: Number,
+      default: null,
     },
   },
   {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,32 +12,28 @@ import { Loader2 } from "lucide-react";
 export default function ScheduleInterview() {
   const { control, register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: {
-      status: "Scheduled"
+      status: "Scheduled",
+      expertIds: [{ id: '' }]
     }
   });
+  const { fields, append, remove } = useFieldArray({ control, name: "expertIds" });
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (data) => {
-    console.log("onSubmit function called with data:", data);
     setIsLoading(true);
     try {
-      console.log("Sending data to API:", {
+      const formattedData = {
         ...data,
+        expertIds: data.expertIds.map(expert => expert.id), // Extract only the IDs
         questions: [{ questionText: data.initialQuestion }],
-      });
+      };
 
-      const response = await fetch('https://justhire-1.onrender.com/api/interviews/create', {
+      const response = await fetch('http://localhost:8000/api/interviews/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...data,
-          questions: [{ questionText: data.initialQuestion }],
-        }),
-      }).catch(error => {
-        console.error("Network error:", error);
-        throw new Error("Network error occurred");
+        body: JSON.stringify(formattedData),
       });
 
       if (!response.ok) {
@@ -74,13 +70,42 @@ export default function ScheduleInterview() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="expertId" className='text-white'>Expert ID</Label>
+              <Label htmlFor="expertIds" className='text-white'>Expert IDs</Label>
+              {fields.map((field, index) => (
+                <div key={field.id} className="flex items-center space-x-2">
+                  <Input
+                    {...register(`expertIds.${index}.id`, { required: "Expert ID is required" })}
+                    placeholder="Enter Expert ID"
+                    className="bg-[#0a0d16] border-slate-700 text-white"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="text-red-500"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                onClick={() => append({ id: '' })}
+                className="mt-2 bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                Add Expert
+              </Button>
+              {errors.expertIds && <p className="text-red-500 text-sm">{errors.expertIds.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="meetingId" className='text-white'>Meeting ID</Label>
               <Input
-                id="expertId"
-                {...register("expertId", { required: "Expert ID is required" })}
+                id="meetingId"
+                type="number"
+                {...register("meetingId", { required: "Meeting ID is required", valueAsNumber: true })}
                 className="bg-[#0a0d16] border-slate-700 text-white"
               />
-              {errors.expertId && <p className="text-red-500 text-sm">{errors.expertId.message}</p>}
+              {errors.meetingId && <p className="text-red-500 text-sm">{errors.meetingId.message}</p>}
             </div>
 
             <div className="space-y-2">
