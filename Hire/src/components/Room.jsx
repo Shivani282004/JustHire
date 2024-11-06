@@ -52,10 +52,10 @@ export default function Component() {
   }
 
   return (
-    <div className="flex h-screen bg-[#0F1117]">
+    <div className="flex h-screen bg-[#0F1117] overflow-hidden">
       {/* Left Sidebar - Participants */}
       {isParticipantsOpen && (
-        <div className="w-80 border-r border-[#2D2F36]">
+        <div className="w-80 border-r border-[#2D2F36] bg-[#0F1117] flex flex-col">
           <div className="p-4 border-b border-[#2D2F36]">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">
@@ -66,7 +66,7 @@ export default function Component() {
               </button>
             </div>
           </div>
-          <div className="h-[calc(100vh-5rem)] overflow-auto">
+          <div className="flex-1 overflow-auto">
             <div className="p-4 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-[#1E2028] flex items-center justify-center">
@@ -94,43 +94,43 @@ export default function Component() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Video Grid */}
-        <div className="flex-1 grid grid-cols-2 gap-4 p-4 bg-[#0F1117]">
-          {Object.entries(streams).map(([participantId, stream]) => (
-            <div
-              key={participantId}
-              className="relative aspect-video bg-[#1E2028] rounded-lg overflow-hidden"
-            >
-              {(stream.getVideoTracks()[0]?.enabled || (participantId !== userId && isScreenSharing)) ? (
-                <video
-                  ref={(video) => {
-                    if (video) {
-                      video.srcObject = stream;
-                      video.play().catch(error => console.error('Error playing video:', error));
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  muted={participantId === userId}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <User className="h-20 w-20 text-gray-600" />
-                </div>
-              )}
-              <div className="absolute bottom-4 left-4">
-                <div className="flex items-center gap-2 bg-black/50 rounded-lg px-3 py-1">
-                  <div className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
-                  <span className="text-sm text-white">
-                    {participantId === userId ? "You" : participantId}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="flex-1 flex flex-col bg-[#0F1117] overflow-hidden">
+    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-[#0F1117] overflow-auto">
+  {Object.entries(streams).map(([participantId, stream]) => (
+    <div
+      key={participantId}
+      className="relative min-w-0 aspect-video max-h-[300px] bg-[#1E2028] rounded-lg overflow-hidden"
+    >
+      {(stream.getVideoTracks()[0]?.enabled || (participantId !== userId && isScreenSharing)) ? (
+        <video
+          ref={(video) => {
+            if (video) {
+              video.srcObject = stream;
+              video.play().catch(error => console.error('Error playing video:', error));
+            }
+          }}
+          autoPlay
+          playsInline
+          muted={participantId === userId}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <User className="h-20 w-20 text-gray-600" />
+        </div>
+      )}
+      <div className="absolute bottom-4 left-4">
+        <div className="flex items-center gap-2 bg-black/50 rounded-lg px-3 py-1">
+          <div className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
+          <span className="text-sm text-white">
+            {participantId === userId ? "You" : participantId}
+          </span>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
 
         {/* Controls */}
         <div className="h-20 border-t border-[#2D2F36] bg-[#0F1117] flex items-center justify-between px-8">
@@ -176,11 +176,11 @@ export default function Component() {
 
       {/* Right Sidebar - Chat */}
       {isChatOpen && (
-        <div className="w-80 border-l border-[#2D2F36] bg-[#0F1117]">
+        <div className="w-80 border-l border-[#2D2F36] bg-[#0F1117] flex flex-col">
           <div className="p-4 border-b border-[#2D2F36]">
             <h2 className="text-lg font-semibold text-white">Chat</h2>
           </div>
-          <div className="h-[calc(100vh-10rem)] overflow-auto">
+          <div className="flex-1 overflow-auto">
             <div className="p-4 space-y-4">
               {messages.map((msg, index) => (
                 <div key={index} className="space-y-2">

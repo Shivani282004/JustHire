@@ -8,6 +8,7 @@ import interviewRoute from "./routes/interviewRoutes.js";
 import questionbank from './routes/questionBankRoute.js';
 import http from 'http';
 import { Server } from 'socket.io';
+import Message from './models/Message.js';
 
 dotenv.config();
 
@@ -39,11 +40,10 @@ app.use('/api/questionBank', questionbank);
 
 const rooms = new Map();
 
+
+
 io.on('connection', (socket) => {
   console.log('A user connected');
-  socket.on('chat-message', (roomId, message) => {
-    io.to(roomId).emit('chat-message', message);
-  });
   socket.on('join-room', (roomId, userId) => {
     // Remove user from any previous room
     for (const [roomId, users] of rooms.entries()) {
@@ -91,8 +91,36 @@ io.on('connection', (socket) => {
       }
     }
   });
+
+socket.on('chat-message', async (roomId, message) => {
+  // Save message to the database
+  const newMessage = new Message({
+    roomId,
+    sender: message.sender,
+    content: message.content,
+    timestamp: message.timestamp,
+  });
+  await newMessage.save();
+
+  // Broadcast the message to all users in the room
+  io.to(roomId).emit('chat-message', message);
 });
 
+socket.on('join-room', async (roomId, userId) => {
+  // Fetch previous messages for the room from the database
+  const previousMessages = await Message.find({ roomId }).sort({ timestamp: 1 });
+  
+  // Send previous messages to the newly joined user
+  socket.emit('previous-messages', previousMessages);
+
+  // Rest of the join-room logic
+});
+
+});
+
+
+
+connectDB();
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 connectDB();

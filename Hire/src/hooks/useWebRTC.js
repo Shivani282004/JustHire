@@ -8,8 +8,8 @@ const configuration = {
 export function useWebRTC(roomId, userId) {
   const [participants, setParticipants] = useState([]);
   const [streams, setStreams] = useState({});
-  const [isMicOn, setIsMicOn] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [isCameraOn, setIsCameraOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [messages, setMessages] = useState([]);
   const socketRef = useRef();
@@ -19,6 +19,9 @@ export function useWebRTC(roomId, userId) {
 
   useEffect(() => {
     socketRef.current = io('http://localhost:8000');
+    socketRef.current.on('previous-messages', (messages) => {
+      setMessages(messages);
+    });
     
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
@@ -129,6 +132,14 @@ export function useWebRTC(roomId, userId) {
     if (audioTrack) {
       audioTrack.enabled = !audioTrack.enabled;
       setIsMicOn(audioTrack.enabled);
+      
+      // Update the audio track for all peers
+      Object.values(peersRef.current).forEach(peer => {
+        const sender = peer.getSenders().find(s => s.track.kind === 'audio');
+        if (sender) {
+          sender.replaceTrack(audioTrack);
+        }
+      });
     }
   }
 
@@ -185,15 +196,6 @@ export function useWebRTC(roomId, userId) {
     setMessages(prev => [...prev, message]);
   }
 
-  function sendMessage(message) {
-    const newMessage = {
-      content: message,
-      sender: userId,
-      timestamp: new Date().toISOString(),
-    };
-    socketRef.current.emit('chat-message', roomId, newMessage);
-    setMessages(prev => [...prev, newMessage]);
-  }
 
   function endMeeting() {
     socketRef.current.emit('leave-room', roomId, userId);
@@ -202,6 +204,27 @@ export function useWebRTC(roomId, userId) {
     Object.values(peersRef.current).forEach(peer => peer.close());
     socketRef.current.disconnect();
   }
+  function sendMessage(message) {
+    const newMessage = {
+      content: message,
+      sender: userId,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, newMessage]); // Update local state
+    socketRef.current.emit('chat-message', roomId, newMessage); // Send to server
+  }
+  
+  function handleChatMessage(message) {
+    // Check for duplicates before adding
+    setMessages(prev => {
+      if (prev.some(msg => msg.timestamp === message.timestamp && msg.sender === message.sender)) {
+        return prev;
+      }
+      return [...prev, message];
+    });
+  }
+  
+  
 
   return { 
     participants, 
@@ -214,6 +237,7 @@ export function useWebRTC(roomId, userId) {
     isScreenSharing,
     messages,
     sendMessage,
-    endMeeting
+    endMeeting,
+    handleChatMessage
   };
 }
