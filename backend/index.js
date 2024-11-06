@@ -6,6 +6,8 @@ import bodyParser from 'body-parser';
 import userRoute from "./routes/userRoutes.js";
 import interviewRoute from "./routes/interviewRoutes.js";
 import questionbank from './routes/questionBankRoute.js';
+import http from 'http';
+import { Server } from 'socket.io';
 
 dotenv.config();
 
@@ -13,6 +15,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
+    methods: ["GET", "POST"]
+  }
+});
 
 const corsOptions = {
     origin: ['http://localhost:5174', 'https://justhirehere.netlify.app'],
@@ -23,15 +33,67 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-const PORT = process.env.PORT || 8000;
-
-// API routes
 app.use("/api/user", userRoute);
 app.use('/api/interviews', interviewRoute);
 app.use('/api/questionBank', questionbank);
 
-connectDB();
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+const rooms = new Map();
+
+io.on('connection', (socket) => {
+  console.log('A user connected');
+  socket.on('chat-message', (roomId, message) => {
+    io.to(roomId).emit('chat-message', message);
+  });
+  socket.on('join-room', (roomId, userId) => {
+    // Remove user from any previous room
+    for (const [roomId, users] of rooms.entries()) {
+      if (users.has(socket.id)) {
+        users.delete(socket.id);
+        if (users.size === 0) {
+          rooms.delete(roomId);
+        }
+        break;
+      }
+    }
+
+    // Join new room
+    socket.join(roomId);
+    if (!rooms.has(roomId)) {
+      rooms.set(roomId, new Map());
+    }
+    rooms.get(roomId).set(socket.id, userId);
+    
+    // Emit all users in the room to the newly joined user
+    const usersInRoom = Array.from(rooms.get(roomId).values());
+    socket.emit('all-users', usersInRoom);
+
+    // Notify other users in the room about the new user
+    socket.to(roomId).emit('user-connected', userId);
+
+    socket.on('disconnect', () => {
+      if (rooms.has(roomId)) {
+        rooms.get(roomId).delete(socket.id);
+        if (rooms.get(roomId).size === 0) {
+          rooms.delete(roomId);
+        } else {
+          io.to(roomId).emit('user-disconnected', userId);
+        }
+      }
+    });
+  });
+
+  socket.on('signal', (to, from, signal) => {
+    const roomId = [...rooms.keys()].find(roomId => rooms.get(roomId).has(socket.id));
+    if (roomId) {
+      const toSocketId = [...rooms.get(roomId).entries()].find(([_, id]) => id === to)?.[0];
+      if (toSocketId) {
+        io.to(toSocketId).emit('signal', from, signal);
+      }
+    }
+  });
 });
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+connectDB();
 
