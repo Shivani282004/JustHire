@@ -14,6 +14,8 @@ import ExpertDashboard from './components/ExpertDashboard';
 import Interviews from './components/Interviews';
 import JoinMeeting from './components/JoinMeeting';
 import Room from  './components/Room';
+import Report from  './components/report';
+import InterviewReport from "./components/InterviewReport";
 
 function App() {
   return (
@@ -32,6 +34,8 @@ function App() {
         <Route path="/interviews" element={<Interviews />} />
         <Route path="/join-meeting" element={<JoinMeeting />} />
         <Route path="/room/:meetingId" element={<Room />} />
+        <Route path="/report" element={<Report />} />
+        <Route path="/interview-report/:interviewId"  element={<InterviewReport />} />
       </Routes>
     </Router>
   );

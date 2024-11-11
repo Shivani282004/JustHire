@@ -54,37 +54,53 @@ export const getInterviewById = async (req, res) => {
   }
 };
 
-// Update an interview by ID
 export const updateInterview = async (req, res) => {
   try {
-    const { candidateId, expertIds } = req.body;
+    const { id } = req.params;
+    const { questions, responses, status, updateType, index } = req.body;
 
-    // Validate candidate's role if candidateId is provided
-    if (candidateId) {
-      const candidate = await User.findOne({ _id: candidateId, role: 'candidate' });
-      if (!candidate) {
-        return res.status(400).json({ message: "The selected candidate does not have the 'candidate' role" });
+    let updateData = {};
+
+    if (updateType === 'updateScore') {
+      if (questions && questions.length > 0) {
+        updateData.$set = { [`questions.${index}.relevancyScore`]: questions[0].relevancyScore };
+      } else if (responses && responses.length > 0) {
+        updateData.$set = { [`responses.${index}.responseScore`]: responses[0].responseScore };
+      }
+    } else {
+      if (questions) {
+        updateData.$push = { ...updateData.$push, questions: { $each: questions } };
+      }
+      
+      if (responses) {
+        updateData.$push = { ...updateData.$push, responses: { $each: responses } };
       }
     }
-
-    // Validate experts' roles if expertIds are provided
-    if (expertIds) {
-      const experts = await User.find({ _id: { $in: expertIds }, role: 'expert' });
-      if (experts.length !== expertIds.length) {
-        return res.status(400).json({ message: "One or more selected experts do not have the 'expert' role" });
-      }
+    
+    if (status) {
+      updateData.$set = { ...updateData.$set, status: status };
     }
 
-    // Update the interview if all roles are valid
-    const interview = await Interview.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No valid update data provided" });
+    }
+
+    const interview = await Interview.findByIdAndUpdate(id, updateData, { new: true });
+    console.log('Updated Interview:', interview);
+
     if (!interview) {
-      return res.status(404).json({ message: 'Interview not found' });
+      return res.status(404).json({ error: "Interview not found" });
     }
+
     res.status(200).json(interview);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Error updating interview:", error);
+    res.status(500).json({ error: "An error occurred while updating the interview" });
   }
 };
+
+
+
 
 // Delete an interview by ID
 export const deleteInterview = async (req, res) => {

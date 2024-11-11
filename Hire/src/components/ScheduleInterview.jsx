@@ -25,7 +25,6 @@ export default function ScheduleInterview() {
       const formattedData = {
         ...data,
         expertIds: data.expertIds.map(expert => expert.id), // Extract only the IDs
-        questions: [{ questionText: data.initialQuestion }],
       };
 
       const response = await fetch('http://localhost:8000/api/interviews/create', {

@@ -60,7 +60,8 @@ export default function Component() {
 
         console.log("Login successful, showing success toast");
         localStorage.setItem("loggedInEmail", email);
-        localStorage.setItem("loggedInRole", role);
+        sessionStorage.setItem("loggedInRole", role);  // "expert" or "candidate"
+
 
         toast.success('Login was successful!', {
             onClose: () => {

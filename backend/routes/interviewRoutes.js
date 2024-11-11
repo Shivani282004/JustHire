@@ -7,8 +7,8 @@ import { createInterview, getAllInterviews, getInterviewById, updateInterview, d
 // Define routes
 router.post('/create',createInterview);
 router.get('/getAll', getAllInterviews);
-router.get('get/:id', getInterviewById);
-router.put('update/:id', updateInterview);
-router.delete('delete/:id', deleteInterview);
+router.get('/get/:id', getInterviewById);
+router.put('/update/:id', updateInterview);
+router.delete('/delete/:id', deleteInterview);
 
 export default router;

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState  ,useEffect, useRef} from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 import {
   Camera,
@@ -11,9 +11,12 @@ import {
   PhoneOff,
   Settings,
   Users,
-  User
+  User,
+  StopCircle
 } from "lucide-react"
 import { useWebRTC } from "../hooks/useWebRTC.js"
+import axios from "axios"
+
 
 export default function Component() {
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -23,7 +26,11 @@ export default function Component() {
   const location = useLocation()
   const navigate = useNavigate()
   const userId = location.state?.userId || 'defaultUserId'
-
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [interview, setInterview] = useState(null);
+  const recognitionRef = useRef();
+  const [meetingStarted, setMeetingStarted] = useState(false)
   const { 
     participants, 
     streams, 
@@ -40,6 +47,7 @@ export default function Component() {
 
   const handleEndMeeting = () => {
     endMeeting()
+    setMeetingStarted(false)
     navigate('/join-meeting')
   }
 
@@ -50,6 +58,91 @@ export default function Component() {
       setMessage("")
     }
   }
+
+// Add this effect to set up speech recognition
+useEffect(() => {
+  if ('webkitSpeechRecognition' in window) {
+    recognitionRef.current = new webkitSpeechRecognition()
+    recognitionRef.current.continuous = true
+    recognitionRef.current.interimResults = true
+
+    recognitionRef.current.onresult = (event) => {
+      let interimTranscript = ''
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          setTranscript((prev) => prev + event.results[i][0].transcript + ' ')
+        } else {
+          interimTranscript += event.results[i][0].transcript
+        }
+      }
+    }
+  }
+}, [])
+
+
+useEffect(() => {
+  axios.get(`http://localhost:8000/api/interviews/getAll`)
+    .then(response => {
+      const interviewData = response.data.find(item => item.meetingId.toString() === meetingId.toString());
+      if (interviewData) setInterview(interviewData);
+      else console.error("Interview with specified meetingId not found");
+    })
+    .catch(error => console.error("Error fetching interviews:", error));
+}, [meetingId]);
+
+useEffect(() => {
+  // Set meeting as started when more than one participant joins
+  if (participants.length > 0) {
+    setMeetingStarted(true)
+  }
+
+  // Update interview status only if the meeting has started and all participants have left
+  if (meetingStarted && participants.length === 0 && interview) {
+    axios.put(`http://localhost:8000/api/interviews/update/${interview._id}`, {
+      status: 'Pending Evaluation'
+    })
+      .then(() => {
+        console.log("Interview status updated to Pending Evaluation")
+        setMeetingStarted(false) // Reset meeting started state
+      })
+      .catch(error => console.error("Error updating interview status:", error))
+  }
+}, [participants, interview, meetingStarted])
+
+const toggleRecording = () => {
+  if (isRecording) {
+    recognitionRef.current.stop();
+    
+    const loggedInRole = sessionStorage.getItem("loggedInRole");  // Using sessionStorage here
+    console.log(loggedInRole)
+    const updateData = loggedInRole === "expert"
+      ? { questions: [{ questionText: transcript }] }
+      : { responses: [{ responseText: transcript }] };
+    
+    
+    // Check if the data is correctly formed before making the request
+    console.log("Update data:", updateData);
+
+    if (interview) {
+      axios.put(`http://localhost:8000/api/interviews/update/${interview._id}`, updateData)
+        .then(response => console.log("Transcript saved"))
+        .catch(error => {
+          if (error.response && error.response.status === 404) {
+            console.error("Endpoint not found: Check if the update route exists");
+          } else {
+            console.error("Error saving transcript:", error);
+          }
+        });
+    }
+
+    setTranscript("");
+  } else {
+    recognitionRef.current.start();
+  }
+
+  setIsRecording(!isRecording);
+};
+
 
   return (
     <div className="flex h-screen bg-[#0F1117] overflow-hidden">
@@ -94,42 +187,44 @@ export default function Component() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-[#0F1117] overflow-hidden">
-    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-[#0F1117] overflow-auto">
-  {Object.entries(streams).map(([participantId, stream]) => (
-    <div
-      key={participantId}
-      className="relative min-w-0 aspect-video max-h-[300px] bg-[#1E2028] rounded-lg overflow-hidden"
-    >
-      {(stream.getVideoTracks()[0]?.enabled || (participantId !== userId && isScreenSharing)) ? (
-        <video
-          ref={(video) => {
-            if (video) {
-              video.srcObject = stream;
-              video.play().catch(error => console.error('Error playing video:', error));
-            }
-          }}
-          autoPlay
-          playsInline
-          muted={participantId === userId}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <User className="h-20 w-20 text-gray-600" />
-        </div>
-      )}
-      <div className="absolute bottom-4 left-4">
-        <div className="flex items-center gap-2 bg-black/50 rounded-lg px-3 py-1">
-          <div className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
-          <span className="text-sm text-white">
-            {participantId === userId ? "You" : participantId}
-          </span>
-        </div>
-      </div>
-    </div>
-  ))}
+      <div className="flex-1 flex flex-col bg-[#0F1117] overflow-hidden ">
+        {/* Video Grid */}
+        <div className="flex-1 grid grid-cols-2 gap-x-20 gap-y-20 p-4 py-4 bg-[#0F1117] overflow-auto">
+  {Object.entries(streams).map(([participantId, stream]) => (
+    <div
+      key={participantId}
+      className="relative aspect-video bg-[#1E2028] rounded-lg overflow-hidden "
+    >
+      {(stream.getVideoTracks()[0]?.enabled || (participantId !== userId && isScreenSharing)) ? (
+        <video
+          ref={(video) => {
+            if (video) {
+              video.srcObject = stream;
+              video.play().catch(error => console.error('Error playing video:', error));
+            }
+          }}
+          autoPlay
+          playsInline
+          muted={participantId === userId}
+          className="w-full h-full object-cover "
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <User className="h-20 w-20 text-gray-600" />
+        </div>
+      )}
+      <div className="absolute bottom-4 left-4">
+        <div className="flex items-center gap-2 bg-black/50 rounded-lg px-3 py-1">
+          <div className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
+          <span className="text-sm text-white">
+            {participantId === userId ? "You" : participantId}
+          </span>
+        </div>
+      </div>
+    </div>
+  ))}
 </div>
+
 
 
         {/* Controls */}
@@ -163,6 +258,20 @@ export default function Component() {
             >
               <PhoneOff className="h-5 w-5" />
             </button>
+           
+            <button 
+  onClick={toggleRecording}
+  className={`p-4 rounded-full hover:bg-[#1E2028] border border-[#2D2F36] ${isRecording ? 'text-[#8B5CF6]' : 'text-gray-400'}`}
+>
+  {isRecording ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+</button>
+
+{isRecording && (
+  <div className="absolute top-4 left-4 right-4 bg-black/50 p-2 rounded">
+    <p className="text-white text-sm">{transcript}</p>
+  </div>
+)}
+
           </div>
 
           <button

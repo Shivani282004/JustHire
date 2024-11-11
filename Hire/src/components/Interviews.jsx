@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate,useLocation } from 'react-router-dom';
 import { Calendar, Clock, User, Briefcase, Video, Trash2, Search, Hash } from "lucide-react";
+import axios from 'axios';
 
 const Navbar = () => (
   <nav className="bg-[#1a1f2e] p-4 text-white">
@@ -36,8 +37,8 @@ const InterviewCard = ({ interview, onJoin, onDelete, onEvaluate }) => {
         style={{
           overflowY: 'scroll',
           height: '100%',
-          msOverflowStyle: 'none', // IE and Edge
-          scrollbarWidth: 'none', // Firefox
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
         }}
       >
         <div className="space-y-2 text-sm text-slate-300">
@@ -107,7 +108,9 @@ export default function Interviews() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const loggedInEmail = localStorage.getItem("loggedInEmail");
-  const navigate = useNavigate(); // Use navigate here
+  const navigate = useNavigate();
+  const location = useLocation();
+
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -124,9 +127,10 @@ export default function Interviews() {
         setLoading(false);
       }
     };
-
+  
     fetchInterviews();
-  }, []);
+  }, [location]);  // Trigger fetch on route changes
+  
 
   const filterInterviews = (status) =>
     interviews
@@ -139,18 +143,70 @@ export default function Interviews() {
 
   const handleJoin = (interviewId) => {
     console.log(`Joining meeting for interview ${interviewId}`);
-    // Navigate to the join meeting page here
     navigate('/join-meeting');
   };
 
   const handleDelete = (interviewId) => {
     console.log(`Deleting interview ${interviewId}`);
-    // You can add the delete functionality here if needed
+    // Add delete functionality here
   };
 
-  const handleEvaluate = (interviewId) => {
-    console.log(`Evaluating interview ${interviewId}`);
-    // Add evaluation logic here if needed
+  
+  const handleEvaluate = async (interviewId) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://localhost:8000/api/interviews/get/${interviewId}`);
+      const interview = response.data;
+
+      // Evaluate questions
+      for (let i = 0; i < interview.questions.length; i++) {
+        const relevancyPrompt = `On a scale of 1-10, how relevant is this question for the role of ${interview.role}: "${interview.questions[i].questionText} (ignore spelling mistake and be generous while giving marks)". Please respond with only the numeric score.`;
+        const relevancyResponse = await axios.post('http://localhost:8000/api/evaluate', { prompt: relevancyPrompt });
+        const relevancyScore = relevancyResponse.data.score;
+
+        // Update the question's relevancy score in the database
+        await axios.put(`http://localhost:8000/api/interviews/update/${interviewId}`, {
+          questions: [{ relevancyScore }],
+          updateType: 'updateScore',
+          index: i
+        });
+      }
+
+      // Fetch the updated interview data
+      const updatedInterviewResponse = await axios.get(`http://localhost:8000/api/interviews/get/${interviewId}`);
+      const updatedInterview = updatedInterviewResponse.data;
+
+      // Evaluate responses
+      for (let i = 0; i < updatedInterview.responses.length; i++) {
+        const scorePrompt = `On a scale of 1-10, how correct is this answer: "${updatedInterview.responses[i].responseText}" for the question "${updatedInterview.questions[i].questionText} (ignore spelling mistake and be generous while giving marks)". Please respond with only the numeric score.`;
+        const scoreResponse = await axios.post('http://localhost:8000/api/evaluate', { prompt: scorePrompt });
+        const responseScore = scoreResponse.data.score;
+
+        // Update the response's score in the database
+        await axios.put(`http://localhost:8000/api/interviews/update/${interviewId}`, {
+          responses: [{ responseScore }],
+          updateType: 'updateScore',
+          index: i
+        });
+      }
+
+      // Update the interview status to "Completed"
+      const finalUpdatedInterview = await axios.put(`http://localhost:8000/api/interviews/update/${interviewId}`, {
+        status: "Completed"
+      });
+
+      setInterviews(prevInterviews => 
+        prevInterviews.map(interview => 
+          interview._id === interviewId ? finalUpdatedInterview.data : interview
+        )
+      );
+
+      console.log("Evaluation completed");
+    } catch (error) {
+      console.error("Error during evaluation:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

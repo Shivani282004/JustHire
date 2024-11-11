@@ -26,7 +26,7 @@ export default function LandingPage() {
               </div>
               <NavigationMenu className="ml-6">
                 <NavigationMenuList>
-                  {["Home", "Interview", "Performance", "Scoring", "Contact"].map((item) => (
+                  {["Home", "Interview", "Performance", "scoring", "Contact"].map((item) => (
                     <NavigationMenuItem key={item}>
                       <NavigationMenuLink className="text-gray-300 hover:text-white px-3 py-2">
                         {item}
@@ -38,9 +38,7 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-4">
             <Button className="bg-purple-600 hover:bg-purple-700"onClick={() => navigate("/login")}>Login</Button>
-            <Button className="bg-purple-600 hover:bg-purple-700"onClick={() => navigate("/signup")}>Signup</Button>
-              
-              
+            <Button className="bg-purple-600 hover:bg-purple-700"onClick={() => navigate("/signup")}>Signup</Button> 
             </div>
           </div>
         </div>
@@ -65,6 +63,7 @@ export default function LandingPage() {
           <br />
           Real-Time, Fair, Impartial Evaluation
         </p>
+        <Button className="bg-purple-600 hover:bg-purple-700 mr-4" size="lg" onClick={() => navigate("/report")}>Report</Button> 
 
         <Button
           className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-black"

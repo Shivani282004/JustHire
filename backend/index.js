@@ -9,8 +9,11 @@ import questionbank from './routes/questionBankRoute.js';
 import http from 'http';
 import { Server } from 'socket.io';
 import Message from './models/Message.js';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 dotenv.config();
+
 
 const app = express();
 app.use(express.json());
@@ -119,8 +122,28 @@ socket.on('join-room', async (roomId, userId) => {
 });
 
 
+// Initialize Gemini API client with API key from environment
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-connectDB();
+app.post('/api/evaluate', async (req, res) => {
+  const { prompt } = req.body;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+    
+    const score = parseInt(response.match(/\d+/)[0]);
+    const validScore = Math.min(Math.max(score, 1), 10);
+    
+    res.json({ score: validScore });
+  } catch (error) {
+    console.error("Error generating content:", error);
+    res.status(500).json({ error: "Error evaluating content" });
+  }
+});
+
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 connectDB();

@@ -24,30 +24,34 @@ const interviewSchema = new Schema(
       type: String,
       required: true,
     },
-    questions: [
-      {
-        questionText: {
-          type: String,
-          default: null,
+    questions: {
+      type: [
+        {
+          questionText: {
+            type: String
+          },
+          relevancyScore: {
+            type: Number,
+            default: null,
+          },
         },
-        relevancyScore: {
-          type: Number,
-          default: null,
+      ],
+      default: () => [], // Use a function to return a new empty array
+    },
+    responses: {
+      type: [
+        {
+          responseText: {
+            type: String
+          },
+          responseScore: {
+            type: Number,
+            default: null,
+          },
         },
-      },
-    ],
-    responses: [
-      {
-        responseText: {
-          type: String,
-          required: true,
-        },
-        responseScore: {
-          type: Number,
-          default: null,
-        },
-      },
-    ],
+      ],
+      default: () => [], // Use a function to return a new empty array
+    },
     expertOverallScore: {
       type: Number,
       default: null,
