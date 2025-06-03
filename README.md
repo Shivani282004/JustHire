@@ -19,19 +19,26 @@ JustHire is a scalable, real-time job hiring platform designed for Admins, Exper
 
 ## Setup Instructions
 
-for running frontend-
-     # Clone the repository
-     git clone https://github.com/Shivani282004/JustHire.git
-     cd JustHire
+### Running Frontend
 
-    # Install dependencies
-    npm install
+# Clone the repository
+git clone https://github.com/Shivani282004/JustHire.git
+cd Hire
 
-    # Start the development server
-    npm run dev
+# Install frontend dependencies
+npm install
 
-for running backend-
-    # Start backend server
-    npm start
+# Start the frontend development server
+npm run dev
+
+# Navigate to the backend directory
+cd backend
+
+# Install backend dependencies (if required)
+npm install
+
+# Start the backend server
+npm start
+
 
     
