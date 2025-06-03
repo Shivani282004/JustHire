@@ -31,6 +31,7 @@ for running frontend-
     npm run dev
 
 for running backend-
-    # npm start
+    # Start backend server
+    npm start
 
     
