@@ -46,7 +46,7 @@ JustHire is a scalable, real-time job hiring platform designed for Admins, Exper
     cd backend
     ```
 
-2. (Optional) Install backend dependencies:
+2. Install backend dependencies:
     ```bash
     npm install
     ```
