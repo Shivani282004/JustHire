@@ -21,24 +21,42 @@ JustHire is a scalable, real-time job hiring platform designed for Admins, Exper
 
 ### Running Frontend
 
-# Clone the repository
-git clone https://github.com/Shivani282004/JustHire.git
-cd Hire
+1. Clone the repository and navigate to the project folder:
+    ```bash
+    git clone https://github.com/Shivani282004/JustHire.git
+    cd Hire
+    ```
 
-# Install frontend dependencies
-npm install
+2. Install frontend dependencies:
+    ```bash
+    npm install
+    ```
 
-# Start the frontend development server
-npm run dev
+3. Start the frontend development server:
+    ```bash
+    npm run dev
+    ```
 
-# Navigate to the backend directory
-cd backend
+---
 
-# Install backend dependencies (if required)
-npm install
+### Running Backend
 
-# Start the backend server
-npm start
+1. Navigate to the backend directory:
+    ```bash
+    cd backend
+    ```
+
+2. (Optional) Install backend dependencies:
+    ```bash
+    npm install
+    ```
+
+3. Start the backend server:
+    ```bash
+    npm start
+    ```
+
+
 
 
     
